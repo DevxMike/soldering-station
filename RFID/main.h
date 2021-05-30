@@ -20,6 +20,7 @@ SOFTWARE.*/
 
 #ifndef main_h_
 #define main_h_
+#define DEBUG_DIODE PB1
 
 #include <avr/io.h>
 

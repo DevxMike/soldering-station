@@ -25,11 +25,12 @@ SOFTWARE.*/
 volatile uint8_t cycle = 0;
 
 int main(void){
+    DDRB |= (1 << DEBUG_DIODE);
     init_cycle_timer();
     sei();
 
     while(1){
-        
+        PORTB = (PORTB & (1 << DEBUG_DIODE)) ? PORTB & ~(1 << DEBUG_DIODE) : PORTB | (1 << DEBUG_DIODE);
         while(!cycle){
             continue;
         }
