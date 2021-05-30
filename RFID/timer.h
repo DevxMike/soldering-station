@@ -21,4 +21,8 @@ SOFTWARE.*/
 #ifndef timer_h_
 #define timer_h_
 
+#include <avr/io.h>
+
+void init_cycle_timer(void);
+
 #endif

@@ -19,10 +19,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
 #include "main.h"
+#include <avr/interrupt.h>
+#include "timer.h"
+
+volatile uint8_t cycle = 0;
 
 int main(void){
+    init_cycle_timer();
+    sei();
 
     while(1){
         
+        while(!cycle){
+            continue;
+        }
+        cycle ^= 0xFF;
     }
+}
+ISR(TIMER1_COMPA_vect){
+    cycle ^= 0xFF;
 }

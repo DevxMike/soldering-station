@@ -19,3 +19,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
 #include "timer.h"
+
+void init_cycle_timer(void){
+    TCCR1A = 0x00;
+    TCCR1B |= (1 << WGM12) | (1 << CS10); //CTC mode, no prescaling
+    OCR1AH = 0x3E;
+    OCR1AL = 0x7F; //1000Hz cycle frequency
+    TIMSK |= (1 << OCIE1A);
+}
