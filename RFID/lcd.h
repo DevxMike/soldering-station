@@ -24,20 +24,20 @@ SOFTWARE.*/
 #include <avr/io.h>
 #include <util/delay.h>
 
-#define RS 0 //RS is pin no. 0
+#define RS 7 //RS is pin no. 0
 #define PORT_RS D //on PORTD
-#define RW 1 //and so on
+#define RW 6 //and so on
 #define PORT_RW D
-#define E 2
+#define E 5
 #define PORT_E D
-#define D7 5
-#define PORT_D7 D
-#define D6 6
-#define PORT_D6 D
-#define D5 7
-#define PORT_D5 D
+#define D7 3
+#define PORT_D7 C
+#define D6 2
+#define PORT_D6 C
+#define D5 1
+#define PORT_D5 C
 #define D4 0
-#define PORT_D4 B
+#define PORT_D4 C
 #define PORT(x) SPORT(x) //those macros let us use some
 #define SPORT(x) (PORT##x) //convenient stuff like i.e. PORT(PORT_RS) |= (1 << RS) 
 #define DDR(x) SDDR(x) //instead of PORTx |= (1 << RS)

@@ -21,12 +21,18 @@ SOFTWARE.*/
 #include "main.h"
 #include <avr/interrupt.h>
 #include "timer.h"
+#include "lcd.h"
 
 volatile uint8_t cycle = 0;
 
 int main(void){
     uint16_t debug_led = 1000;
     DDRB |= (1 << DEBUG_DIODE);
+    init_display();
+    write_instruction(DISP_CTRL & BLINK_OFF & CURSOR_OFF); //turn on the display
+    write_string("Hello");
+    locate_ddram(0, 1);
+    write_string("RZiT");
     init_cycle_timer();
     sei();
 
