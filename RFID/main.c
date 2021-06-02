@@ -25,18 +25,26 @@ SOFTWARE.*/
 volatile uint8_t cycle = 0;
 
 int main(void){
+    uint16_t debug_led = 1000;
     DDRB |= (1 << DEBUG_DIODE);
     init_cycle_timer();
     sei();
 
     while(1){
-        PORTB = (PORTB & (1 << DEBUG_DIODE)) ? PORTB & ~(1 << DEBUG_DIODE) : PORTB | (1 << DEBUG_DIODE);
+        
+
+
+        if(debug_led) --debug_led;
+        else{
+            PORTB = (PORTB & (1 << DEBUG_DIODE))? PORTB & ~(1 << DEBUG_DIODE) : PORTB | (1 << DEBUG_DIODE);
+            debug_led = 1000;
+        }
         while(!cycle){
             continue;
         }
-        cycle ^= 0xFF;
+        cycle = 0;
     }
 }
 ISR(TIMER1_COMPA_vect){
-    cycle ^= 0xFF;
+    cycle = 1;
 }
