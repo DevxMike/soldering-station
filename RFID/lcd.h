@@ -68,7 +68,7 @@ void write_data_byte(char); //writes user`s data
 void write_instruction(uint8_t); //writes instruction
 uint8_t read_byte(void); //read data
 uint8_t read_half(void); //read half of byte
-void write_string(char*); //write string to the display
+void write_string(const char*); //write string to the display
 uint8_t busy_flag(void); //read busy flag val
 uint8_t read_data(void); //read data
 void locate_ddram(uint8_t, uint8_t); //set location in ddram

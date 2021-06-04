@@ -24,4 +24,6 @@ SOFTWARE.*/
 
 #include <avr/io.h>
 
+void manage_lcd(volatile uint8_t* flags);
+
 #endif

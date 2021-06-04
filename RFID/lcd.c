@@ -148,7 +148,7 @@ uint8_t read_data(void){
     set_rs(); //data register
     return read_byte(); //read and return byte
 }
-void write_string(char* string){
+void write_string(const char* string){
     while(*string){ //while *string != '\0'
         write_data_byte(*string++); //write byte of data to LCD
     }
