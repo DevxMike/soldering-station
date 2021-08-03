@@ -70,7 +70,6 @@ ISR(TIMER1_COMPA_vect){
 }
 ISR(USART_RXC_vect){
     static char c;
-    c = UDR;
     if(c == TERMINATING_CHAR){
         c = '\0';
         main_flags |= CMD_READY;
