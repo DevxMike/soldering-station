@@ -33,7 +33,7 @@ uint8_t get_temperature(uint16_t* temperature){
         return 0; //no termocouple
     }
     else{
-        *temperature = spi_read_value;
+        *temperature = ((spi_read_value & 0x7FF8) >> 3) * 0.25;
         return 1;
     }
 }
