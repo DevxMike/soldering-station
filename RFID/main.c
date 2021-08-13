@@ -25,22 +25,27 @@ SOFTWARE.*/
 #include "lcd.h"
 #include "uart.h"
 #include "config.h"
+#include "spi.h"
 
 volatile uint8_t cycle = 0;
 volatile uint8_t main_flags;
 char main_string_buffer[20] = { 0 };
 
 int main(void){
-    uint16_t debug_led = 1000;
+    uint16_t debug_led = 1000;  
+    uint16_t temperature = 0;
+  
     DDRB |= (1 << DEBUG_DIODE);
     
     init_display();
     init_UART(103);
+    
 
     write_instruction(DISP_CTRL & BLINK_OFF & CURSOR_OFF); //turn on the display
     write_string("Hello");
     locate_ddram(0, 1);
     write_string("RZiT");
+    init_spi();
     init_cycle_timer();
     sei();
 
@@ -53,10 +58,15 @@ int main(void){
         }
 
         manage_lcd(&main_flags);
+        measure_temperature(&main_flags, &temperature);
+
+        
 
         if(debug_led) --debug_led;
         else{
             PORTB = (PORTB & (1 << DEBUG_DIODE))? PORTB & ~(1 << DEBUG_DIODE) : PORTB | (1 << DEBUG_DIODE);
+            UART_puts(int_to_str(temperature));
+            UART_puts("\n\r");
             debug_led = 1000;
         }
         while(!cycle){
@@ -87,4 +97,42 @@ void manage_lcd(volatile uint8_t* flags){
         case 5: locate_ddram(0, 1); state = 6; break;
         case 6: write_string("explanation"); state = 0; break; 
     }
+}
+void measure_temperature(volatile uint8_t* flags, uint16_t* temperature){
+    static uint8_t state = 0, timer = 0;
+    uint16_t temporary = 0;
+
+    switch(state){
+        case 0: 
+        if(get_temperature(temperature)){
+            *flags &= ~(1 << NO_TERMOCOUPLE_ATTACHED);
+            state = 1; 
+        }
+        else{
+            if(!(*flags & NO_TERMOCOUPLE_ATTACHED)){
+                *flags |= NO_TERMOCOUPLE_ATTACHED;
+            }
+        }
+        break;
+        case 1: if(get_temperature(temperature)){
+            *flags &= ~(1 << NO_TERMOCOUPLE_ATTACHED);
+            //*temperature = *temperature * 0.9 + 0.1 * temporary;
+            timer = 3; state = 2;
+        }
+        else{
+            if(!(*flags & NO_TERMOCOUPLE_ATTACHED)){
+                *flags |= NO_TERMOCOUPLE_ATTACHED;
+            }
+        }
+        break;
+        case 2:
+        if(!timer && (*flags & NO_TERMOCOUPLE_ATTACHED)){
+            state = 0;
+        }
+        else if(!timer){
+            state = 1;
+        }
+        break;
+    }
+    if(timer) --timer;
 }

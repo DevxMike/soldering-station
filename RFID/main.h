@@ -25,5 +25,5 @@ SOFTWARE.*/
 #include <avr/io.h>
 
 void manage_lcd(volatile uint8_t* flags);
-
+void measure_temperature(volatile uint8_t* flags, uint16_t* temperature);
 #endif

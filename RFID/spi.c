@@ -1,5 +1,8 @@
 #include "spi.h"
-#define TEMPERATURE_FLAG_BIT 2
+#include <util/delay.h>
+#include "uart.h"
+
+#define TEMPERATURE_FLAG_BIT 3
 
 void set_ss(void){
     PORTB |= (1 << SS);
@@ -8,16 +11,33 @@ void clr_ss(void){
     PORTB &= ~(1 << SS);
 }
 
+void set_sck(void){
+    PORTB |= (1 << SCK);
+}
+void clr_sck(void){
+    PORTB &= ~(1 << SCK);
+}
+
 void init_spi(void){
-    DDRB |= (1 << SCK) | (1 << MISO);
-    SPCR = (1 << SPE) | (1 << MSTR) | (1 << CPHA) | (1 << SPR0) | (1 << SPIE);
+    DDRB |= (1 << SCK) | (1 << SS);
+    PORTB |= (1 << MISO);
     set_ss();
 }
 
 uint8_t spi_read_byte(void){
-    SPDR = 0x00;
-    while(!(SPSR & (1 << SPIF)));
-    return SPDR;
+    uint8_t temp = 0;
+    
+    for(uint8_t i = 7; i != 0; ++i){
+        set_sck();
+        _delay_us(0.5);
+        if(PINB & (1 << MISO)){
+            temp |= (1 << i);
+        }
+        clr_sck();
+        _delay_us(0.5);
+    }
+
+    return temp;
 }
 
 uint16_t spi_read_word(void){
@@ -51,4 +71,5 @@ uint8_t get_temperature(uint16_t* temperature){
         *temperature = ((spi_read_value & 0x7FF8) >> 3) * 0.25;
         return 1;
     }
+
 }
