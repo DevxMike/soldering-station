@@ -1,6 +1,13 @@
 #include "spi.h"
 #define TEMPERATURE_FLAG_BIT 3
 
+void set_ss(void){
+    PORTB |= (1 << SS);
+}
+void clr_ss(void){
+    PORTB &= ~(1 << SS);
+}
+
 uint8_t spi_read_byte(void){
     return 0;
 }
