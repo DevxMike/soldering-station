@@ -100,7 +100,6 @@ void manage_lcd(volatile uint8_t* flags){
 }
 void measure_temperature(volatile uint8_t* flags, uint16_t* temperature){
     static uint8_t state = 0, timer = 0;
-    uint16_t temporary = 0;
 
     switch(state){
         case 0: 

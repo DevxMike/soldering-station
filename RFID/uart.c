@@ -68,3 +68,11 @@ const char* int_to_str(int16_t value){
     char buffer[20];
     return itoa(value, buffer, 10);
 }
+void UART_puts_binary(uint16_t word){
+    for(uint8_t i = 15; i != 0; --i){
+        if(word & (1 << i)){
+            UART_putc('0' + 1); continue;
+        }
+        UART_putc('0');
+    }
+}
