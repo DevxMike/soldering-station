@@ -30,10 +30,10 @@ SOFTWARE.*/
 volatile uint8_t cycle = 0;
 volatile uint8_t main_flags;
 char main_string_buffer[20] = { 0 };
+uint16_t temperature = 0;
 
 int main(void){
     uint16_t debug_led = 1000;  
-    uint16_t temperature = 0;
   
     DDRB |= (1 << DEBUG_DIODE);
     
@@ -42,9 +42,7 @@ int main(void){
     
 
     write_instruction(DISP_CTRL & BLINK_OFF & CURSOR_OFF); //turn on the display
-    write_string("Hello");
-    locate_ddram(0, 1);
-    write_string("RZiT");
+    write_string("temperatura: ");
     init_spi();
     init_cycle_timer();
     sei();
@@ -88,23 +86,27 @@ ISR(USART_RXC_vect){
 }
 void manage_lcd(volatile uint8_t* flags){
     static uint8_t state = 0;
+    static uint8_t tim = 50;
     switch(state){
-        case 0: if(*flags & CHANGE_CONTENT){ *flags &= ~CHANGE_CONTENT; state = 1; } break;
+        case 0: if(*flags & CHANGE_CONTENT && !tim){ *flags &= ~CHANGE_CONTENT; state = 1; } break;
         case 1: write_instruction(CLEAR_DISP); state = 2; break;
         case 2: locate_ddram(0, 0); state = 3; break;
-        case 3: write_string("recv: "); state = 4; break;
+        case 3: write_string("temperatura: "); state = 4; break;
         case 4: write_string(main_string_buffer); state = 5; break;
         case 5: locate_ddram(0, 1); state = 6; break;
-        case 6: write_string("explanation"); state = 0; break; 
+        case 6: write_string(int_to_str(temperature)); write_string(" stopni"); state = 0; tim = 250; break; 
     }
+    if(tim) --tim;
 }
 void measure_temperature(volatile uint8_t* flags, uint16_t* temperature){
-    static uint8_t state = 0, timer = 0;
+    static uint8_t state = 0;
+    static uint16_t timer = 0;
 
     switch(state){
         case 0: 
         if(get_temperature(temperature)){
-            *flags &= ~(1 << NO_TERMOCOUPLE_ATTACHED);
+            *flags &= ~NO_TERMOCOUPLE_ATTACHED;
+            *flags |= CHANGE_CONTENT;
             state = 1; 
         }
         else{
@@ -114,15 +116,15 @@ void measure_temperature(volatile uint8_t* flags, uint16_t* temperature){
         }
         break;
         case 1: if(get_temperature(temperature)){
-            *flags &= ~(1 << NO_TERMOCOUPLE_ATTACHED);
-            //*temperature = *temperature * 0.9 + 0.1 * temporary;
-            timer = 3; state = 2;
+            *flags &= ~NO_TERMOCOUPLE_ATTACHED;
+            timer = 250; state = 2;
         }
         else{
             if(!(*flags & NO_TERMOCOUPLE_ATTACHED)){
                 *flags |= NO_TERMOCOUPLE_ATTACHED;
             }
         }
+        *flags |= CHANGE_CONTENT;
         break;
         case 2:
         if(!timer && (*flags & NO_TERMOCOUPLE_ATTACHED)){

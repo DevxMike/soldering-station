@@ -22,19 +22,20 @@ void init_spi(void){
     DDRB |= (1 << SCK) | (1 << SS);
     PORTB |= (1 << MISO);
     set_ss();
+    _delay_ms(250);
 }
 
 uint8_t spi_read_byte(void){
     uint8_t temp = 0;
     
-    for(uint8_t i = 7; i != 0; ++i){
+    for(uint8_t i = 7; i != 0; --i){
         set_sck();
-        _delay_us(0.5);
+        _delay_us(1);
         if(PINB & (1 << MISO)){
             temp |= (1 << i);
         }
         clr_sck();
-        _delay_us(0.5);
+        _delay_us(1);
     }
 
     return temp;
@@ -44,8 +45,9 @@ uint16_t spi_read_word(void){
     uint16_t result = 0;
 
     clr_ss();
-    result |= spi_read_byte() << 8;
-    result |= spi_read_byte();
+    _delay_us(1);
+    result |= (uint16_t)spi_read_byte() << 8;
+    result |= (uint16_t)spi_read_byte();
     set_ss();
 
     return result;
@@ -63,13 +65,7 @@ uint8_t check_bit(uint16_t word, uint8_t bit){
 uint8_t get_temperature(uint16_t* temperature){
     uint16_t spi_read_value = spi_read_word();
 
-    if(check_bit(spi_read_value, TEMPERATURE_FLAG_BIT)){
-        *temperature = 0;
-        return 0; //no termocouple attached
-    }
-    else{
         *temperature = ((spi_read_value & 0x7FF8) >> 3) * 0.25;
         return 1;
-    }
 
 }
