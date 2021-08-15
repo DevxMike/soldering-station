@@ -54,6 +54,11 @@ int main(void){
             main_flags |= CHANGE_CONTENT;
             strcpy(main_string_buffer, UART_gets());
         }
+        if(main_flags & SAMPLE_READY){
+            UART_puts(int_to_str(temperature));
+            UART_puts("\n\r");
+            main_flags &= ~SAMPLE_READY;
+        }
 
         manage_lcd(&main_flags);
         measure_temperature(&main_flags, &temperature);
@@ -63,9 +68,6 @@ int main(void){
         if(debug_led) --debug_led;
         else{
             PORTB = (PORTB & (1 << DEBUG_DIODE))? PORTB & ~(1 << DEBUG_DIODE) : PORTB | (1 << DEBUG_DIODE);
-            UART_puts(int_to_str(temperature));
-            UART_puts("\n\r");
-            debug_led = 1000;
         }
         while(!cycle){
             continue;
@@ -86,7 +88,7 @@ ISR(USART_RXC_vect){
 }
 void manage_lcd(volatile uint8_t* flags){
     static uint8_t state = 0;
-    static uint8_t tim = 50;
+    static uint16_t tim = 50;
     switch(state){
         case 0: if(*flags & CHANGE_CONTENT && !tim){ *flags &= ~CHANGE_CONTENT; state = 1; } break;
         case 1: write_instruction(CLEAR_DISP); state = 2; break;
@@ -94,7 +96,7 @@ void manage_lcd(volatile uint8_t* flags){
         case 3: write_string("temperatura: "); state = 4; break;
         case 4: write_string(main_string_buffer); state = 5; break;
         case 5: locate_ddram(0, 1); state = 6; break;
-        case 6: write_string(int_to_str(temperature)); write_string(" stopni"); state = 0; tim = 250; break; 
+        case 6: write_string(int_to_str(temperature)); write_string(" stopni"); state = 0; tim = 1000; break; 
     }
     if(tim) --tim;
 }
@@ -117,6 +119,7 @@ void measure_temperature(volatile uint8_t* flags, uint16_t* temperature){
         break;
         case 1: if(get_temperature(temperature)){
             *flags &= ~NO_TERMOCOUPLE_ATTACHED;
+            *flags |= SAMPLE_READY;
             timer = 250; state = 2;
         }
         else{
