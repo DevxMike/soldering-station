@@ -24,5 +24,6 @@ SOFTWARE.*/
 #include <avr/io.h>
 
 void init_cycle_timer(void);
+void init_pwm_timer(void);
 
 #endif

@@ -29,6 +29,7 @@ SOFTWARE.*/
 
 volatile uint8_t cycle = 0;
 volatile uint8_t main_flags;
+volatile uint8_t PID_pwm = 70;
 char main_string_buffer[20] = { 0 };
 uint16_t temperature = 0;
 
@@ -44,6 +45,7 @@ int main(void){
     write_instruction(DISP_CTRL & BLINK_OFF & CURSOR_OFF); //turn on the display
     write_string("temperatura: ");
     init_spi();
+    init_pwm_timer();
     init_cycle_timer();
     sei();
 
@@ -77,6 +79,12 @@ int main(void){
 }
 ISR(TIMER1_COMPA_vect){
     cycle = 1;
+}
+ISR(TIMER2_COMP_vect){
+    static uint8_t pwm_check;
+    if(pwm_check <= PID_pwm){
+
+    }
 }
 ISR(USART_RXC_vect){
     static char c;

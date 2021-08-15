@@ -27,3 +27,8 @@ void init_cycle_timer(void){
     OCR1AL = 0x7F; //1000Hz cycle frequency
     TIMSK |= (1 << OCIE1A);
 }
+void init_pwm_timer(void){
+    TCCR2 = (1 << WGM21) | (1 << CS20);
+    OCR2 = 0x3D;
+    TIMSK |= (1 << OCIE2);
+}
