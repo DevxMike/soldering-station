@@ -84,7 +84,7 @@ ISR(TIMER1_COMPA_vect){
 }
 ISR(TIMER2_COMP_vect){
     static uint8_t pwm_check;
-    if(pwm_check <= PID_pwm){
+    if(pwm_check++ <= PID_pwm){
         if(!(PID_PORT & (1 << PID_OFFSET))){
             PID_PORT |= (1 << PID_OFFSET);
         } 
