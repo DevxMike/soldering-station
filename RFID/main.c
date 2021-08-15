@@ -26,6 +26,7 @@ SOFTWARE.*/
 #include "uart.h"
 #include "config.h"
 #include "spi.h"
+#include "pid.h"
 
 volatile uint8_t cycle = 0;
 volatile uint8_t main_flags;
@@ -44,6 +45,7 @@ int main(void){
 
     write_instruction(DISP_CTRL & BLINK_OFF & CURSOR_OFF); //turn on the display
     write_string("temperatura: ");
+    init_pwm();
     init_spi();
     init_pwm_timer();
     init_cycle_timer();
@@ -83,7 +85,12 @@ ISR(TIMER1_COMPA_vect){
 ISR(TIMER2_COMP_vect){
     static uint8_t pwm_check;
     if(pwm_check <= PID_pwm){
-
+        if(!(PID_PORT & (1 << PID_OFFSET))){
+            PID_PORT |= (1 << PID_OFFSET);
+        } 
+    }
+    else{
+        PID_PORT &= ~(1 << PID_OFFSET);
     }
 }
 ISR(USART_RXC_vect){
