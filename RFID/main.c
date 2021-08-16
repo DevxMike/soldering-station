@@ -31,18 +31,19 @@ SOFTWARE.*/
 volatile uint8_t cycle = 0;
 volatile uint8_t main_flags;
 volatile uint8_t PID_pwm = 70;
+volatile PID_t regulator;
 char main_string_buffer[20] = { 0 };
 uint16_t temperature = 0;
 
 int main(void){
     uint16_t debug_led = 1000;  
+    uint8_t pid_timer = 5;
   
     DDRB |= (1 << DEBUG_DIODE);
     
+    init_PID(&regulator, 0.0298, 153.32, 38.33, 0.005);
     init_display();
     init_UART(103);
-    
-
     write_instruction(DISP_CTRL & BLINK_OFF & CURSOR_OFF); //turn on the display
     write_string("temperatura: ");
     init_pwm();
@@ -75,6 +76,11 @@ int main(void){
         }
         while(!cycle){
             continue;
+        }
+        if(pid_timer) --pid_timer;
+        else{
+            PID_pwm = get_PID_pwm(&regulator, 450, temperature);
+            pid_timer = 5;
         }
         cycle = 0;
     }
