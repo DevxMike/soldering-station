@@ -19,3 +19,72 @@ void check_buttons(buttons_t* keyboard){
         keyboard->decrement = 0;
     }
 }
+void manage_keyboard(const buttons_t* kbd, uint16_t* desired_temperature){
+    static uint8_t timer, state;
+
+    switch(state){
+        case 0:
+        if(kbd->increment){
+            timer = 45;
+            state = 1;
+        }
+        else if(kbd->decrement){
+            timer = 45;
+            state = 4;
+        }
+        break;
+
+        case 1:
+        if(timer && !kbd->increment){
+            state = 0;
+        }
+        else if(kbd->increment && kbd->decrement){
+            state = 3;
+        }
+        else if(kbd->increment && !timer){
+            state = 2;
+        }
+        break;
+
+        case 2:
+        if(*desired_temperature + 10 > TEMP_MAX){
+            *desired_temperature = TEMP_MAX;
+        }
+        else{
+            *desired_temperature += 10;
+        }
+        timer = 45;
+        state = 1;
+        break;
+
+        case 3:
+        if(!kbd->increment && !kbd->decrement){
+            state = 0;
+        }
+        break;
+
+        case 4:
+        if(timer && !kbd->decrement){
+            state = 0;
+        }
+        else if(kbd->increment && kbd->decrement){
+            state = 3;
+        }
+        else if(kbd->decrement && !timer){
+            state = 5;
+        }
+        break;
+
+        case 5:
+        if(*desired_temperature - 10 < TEMP_MIN){
+            *desired_temperature = TEMP_MIN;
+        }
+        else{
+            *desired_temperature -= 10;
+        }
+        timer = 45;
+        state = 4;
+        break;
+    }
+    if(timer) --timer;
+}

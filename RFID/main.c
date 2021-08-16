@@ -39,6 +39,7 @@ uint16_t temperature = 0;
 int main(void){
     uint16_t debug_led = 1000;  
     uint8_t pid_timer = 5;
+    buttons_t keyboard;
   
     DDRB |= (1 << DEBUG_DIODE);
     

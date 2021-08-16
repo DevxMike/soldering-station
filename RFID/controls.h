@@ -9,6 +9,8 @@
 #define DECREMENT_BTN_PORT PORTD
 #define INCREMENT 3
 #define DECREMENT 4
+#define TEMP_MAX 470
+#define TEMP_MIN 200
 
 typedef struct{
     uint8_t increment : 1;
@@ -18,5 +20,5 @@ typedef struct{
 
 void init_buttons(void);
 void check_buttons(buttons_t* keyboard); 
-
+void manage_keyboard(const buttons_t* kbd, uint16_t* desired_temperature);
 #endif
