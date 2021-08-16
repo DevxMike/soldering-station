@@ -35,20 +35,22 @@ volatile uint8_t PID_pwm = 70;
 volatile PID_t regulator;
 char main_string_buffer[20] = { 0 };
 uint16_t temperature = 0;
+uint16_t desired_temperature = TEMP_MIN;
+uint16_t displayed_temperature;
 
 int main(void){
-    uint16_t debug_led = 1000;  
+    uint16_t display_change = 1000;  
     uint8_t pid_timer = 5;
     buttons_t keyboard;
-  
-    DDRB |= (1 << DEBUG_DIODE);
     
     init_buttons();
     init_PID(&regulator, 0.0298, 153.32, 38.33, 0.005);
     init_display();
     init_UART(103);
     write_instruction(DISP_CTRL & BLINK_OFF & CURSOR_OFF); //turn on the display
-    write_string("temperatura: ");
+    write_string("T_A     T_D ");
+    locate_ddram(0, 1);
+    write_string("HEATING ");
     init_pwm();
     init_spi();
     init_pwm_timer();
@@ -56,10 +58,9 @@ int main(void){
     sei();
 
     while(1){
-        
+
         if(main_flags & CMD_READY){ //this uC is to slow so there is a need for automata
             main_flags &= ~CMD_READY;
-            main_flags |= CHANGE_CONTENT;
             strcpy(main_string_buffer, UART_gets());
         }
         if(main_flags & SAMPLE_READY){
@@ -68,23 +69,28 @@ int main(void){
             main_flags &= ~SAMPLE_READY;
         }
 
+        check_buttons(&keyboard);
         manage_lcd(&main_flags);
         measure_temperature(&main_flags, &temperature);
-
+        manage_keyboard(&main_flags, &keyboard, &desired_temperature);
         
-
-        if(debug_led) --debug_led;
+        if(pid_timer) --pid_timer;
         else{
-            PORTB = (PORTB & (1 << DEBUG_DIODE))? PORTB & ~(1 << DEBUG_DIODE) : PORTB | (1 << DEBUG_DIODE);
+            PID_pwm = get_PID_pwm(&regulator, desired_temperature, temperature);
+            pid_timer = 5;
+        }
+
+        if(display_change) --display_change;
+        else if(!(main_flags & (1 << CHANGE_CONTENT))){
+            main_flags |= 1 << CHANGE_CONTENT;
+            UART_puts("KBD: I");
+            UART_putc('0' + keyboard.increment);
+            UART_puts("\n\r");
         }
         while(!cycle){
             continue;
         }
-        if(pid_timer) --pid_timer;
-        else{
-            PID_pwm = get_PID_pwm(&regulator, 450, temperature);
-            pid_timer = 5;
-        }
+        
         cycle = 0;
     }
 }
@@ -112,17 +118,16 @@ ISR(USART_RXC_vect){
 }
 void manage_lcd(volatile uint8_t* flags){
     static uint8_t state = 0;
-    static uint16_t tim = 50;
+
     switch(state){
-        case 0: if(*flags & CHANGE_CONTENT && !tim){ *flags &= ~CHANGE_CONTENT; state = 1; } break;
-        case 1: write_instruction(CLEAR_DISP); state = 2; break;
-        case 2: locate_ddram(0, 0); state = 3; break;
-        case 3: write_string("temperatura: "); state = 4; break;
-        case 4: write_string(main_string_buffer); state = 5; break;
+        case 0: if(*flags & CHANGE_CONTENT){ *flags &= ~CHANGE_CONTENT; state = 1; } break;
+        case 1: locate_ddram(4, 0); state = 2; break;
+        case 2: if(displayed_temperature < 100){write_string(" ");} write_string(int_to_str(displayed_temperature)); state = 3; break;
+        case 3: locate_ddram(13, 0); state = 4; break;
+        case 4: write_string(int_to_str(desired_temperature)); state = 5; break;
         case 5: locate_ddram(0, 1); state = 6; break;
-        case 6: write_string(int_to_str(temperature)); write_string(" stopni"); state = 0; tim = 1000; break; 
+        case 6: if(PID_pwm > 0) write_string("HEATING"); else write_string("       "); state = 0; break; 
     }
-    if(tim) --tim;
 }
 void measure_temperature(volatile uint8_t* flags, uint16_t* temperature){
     static uint8_t state = 0;
@@ -132,7 +137,6 @@ void measure_temperature(volatile uint8_t* flags, uint16_t* temperature){
         case 0: 
         if(get_temperature(temperature)){
             *flags &= ~NO_TERMOCOUPLE_ATTACHED;
-            *flags |= CHANGE_CONTENT;
             state = 1; 
         }
         else{
@@ -145,6 +149,12 @@ void measure_temperature(volatile uint8_t* flags, uint16_t* temperature){
             *flags &= ~NO_TERMOCOUPLE_ATTACHED;
             *flags |= SAMPLE_READY;
             timer = 250; state = 2;
+            if((((int16_t)*temperature - (int16_t)desired_temperature) < 5) || ((int16_t)*temperature - (int16_t)desired_temperature) > -5){
+                displayed_temperature = displayed_temperature * 0.9 + *temperature * 0.1;
+            }
+            else{
+                displayed_temperature = *temperature;
+            }
         }
         else{
             if(!(*flags & NO_TERMOCOUPLE_ATTACHED)){

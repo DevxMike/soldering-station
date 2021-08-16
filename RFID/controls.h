@@ -20,5 +20,5 @@ typedef struct{
 
 void init_buttons(void);
 void check_buttons(buttons_t* keyboard); 
-void manage_keyboard(const buttons_t* kbd, uint16_t* desired_temperature);
+void manage_keyboard(volatile uint8_t* flags, const buttons_t* kbd, uint16_t* desired_temperature);
 #endif

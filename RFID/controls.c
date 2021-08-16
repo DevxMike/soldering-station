@@ -1,4 +1,5 @@
 #include "controls.h"
+#include "config.h"
 
 void init_buttons(void){
     INCREMENT_BTN_PORT |= (1 << INCREMENT);
@@ -19,17 +20,17 @@ void check_buttons(buttons_t* keyboard){
         keyboard->decrement = 0;
     }
 }
-void manage_keyboard(const buttons_t* kbd, uint16_t* desired_temperature){
-    static uint8_t timer, state;
+void manage_keyboard(volatile uint8_t* flags, const buttons_t* kbd, uint16_t* desired_temperature){
+    static uint8_t timer, state = 0;
 
     switch(state){
         case 0:
         if(kbd->increment){
-            timer = 45;
+            timer = 150;
             state = 1;
         }
         else if(kbd->decrement){
-            timer = 45;
+            timer = 150;
             state = 4;
         }
         break;
@@ -53,7 +54,8 @@ void manage_keyboard(const buttons_t* kbd, uint16_t* desired_temperature){
         else{
             *desired_temperature += 10;
         }
-        timer = 45;
+        *flags |= CHANGE_CONTENT;
+        timer = 150;
         state = 1;
         break;
 
@@ -82,7 +84,8 @@ void manage_keyboard(const buttons_t* kbd, uint16_t* desired_temperature){
         else{
             *desired_temperature -= 10;
         }
-        timer = 45;
+        *flags |= CHANGE_CONTENT;
+        timer = 150;
         state = 4;
         break;
     }
