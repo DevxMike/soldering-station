@@ -10,7 +10,13 @@
 #define INCREMENT 3
 #define DECREMENT 4
 
+typedef struct{
+    uint8_t increment : 1;
+    uint8_t decrement : 1;
+}buttons_t;
+
+
 void init_buttons(void);
-void check_buttons(uint8_t* increment, uint8_t* decrement); 
+void check_buttons(buttons_t* keyboard); 
 
 #endif

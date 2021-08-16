@@ -27,6 +27,7 @@ SOFTWARE.*/
 #include "config.h"
 #include "spi.h"
 #include "pid.h"
+#include "controls.h"
 
 volatile uint8_t cycle = 0;
 volatile uint8_t main_flags;
@@ -41,6 +42,7 @@ int main(void){
   
     DDRB |= (1 << DEBUG_DIODE);
     
+    init_buttons();
     init_PID(&regulator, 0.0298, 153.32, 38.33, 0.005);
     init_display();
     init_UART(103);
