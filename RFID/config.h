@@ -26,7 +26,7 @@ SOFTWARE.*/
 #define TERMINATING_CHAR 'K'
 #define NO_TERMOCOUPLE_ATTACHED 0x04
 #define SAMPLE_READY 0x08
-
+#define GET_PID 0x10
 
 
 #endif

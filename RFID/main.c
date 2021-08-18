@@ -33,6 +33,7 @@ volatile uint8_t cycle = 0;
 volatile uint8_t main_flags;
 volatile uint8_t PID_pwm = 70;
 volatile PID_t regulator;
+
 char main_string_buffer[20] = { 0 };
 uint16_t temperature = 0;
 uint16_t desired_temperature = TEMP_MIN;
@@ -40,11 +41,10 @@ uint16_t displayed_temperature;
 
 int main(void){
     uint16_t display_change = 1000;  
-    uint8_t pid_timer = 5;
     buttons_t keyboard;
     
     init_buttons();
-    init_PID(&regulator, 0.0298, 153.32, 38.33, 0.005);
+    init_PID(&regulator, 0.00298, 153.32, 38.33, 0.005);
     init_display();
     init_UART(103);
     write_instruction(DISP_CTRL & BLINK_OFF & CURSOR_OFF); //turn on the display
@@ -74,18 +74,14 @@ int main(void){
         measure_temperature(&main_flags, &temperature);
         manage_keyboard(&main_flags, &keyboard, &desired_temperature);
         
-        if(pid_timer) --pid_timer;
-        else{
+        if(main_flags & GET_PID){
             PID_pwm = get_PID_pwm(&regulator, desired_temperature, temperature);
-            pid_timer = 5;
+            main_flags &= ~GET_PID;
         }
 
         if(display_change) --display_change;
         else if(!(main_flags & (1 << CHANGE_CONTENT))){
             main_flags |= 1 << CHANGE_CONTENT;
-            UART_puts("KBD: I");
-            UART_putc('0' + keyboard.increment);
-            UART_puts("\n\r");
         }
         while(!cycle){
             continue;
@@ -122,7 +118,7 @@ void manage_lcd(volatile uint8_t* flags){
     switch(state){
         case 0: if(*flags & CHANGE_CONTENT){ *flags &= ~CHANGE_CONTENT; state = 1; } break;
         case 1: locate_ddram(4, 0); state = 2; break;
-        case 2: if(displayed_temperature < 100){write_string(" ");} write_string(int_to_str(displayed_temperature)); state = 3; break;
+        case 2: if(temperature < 100){write_string(" ");} write_string(int_to_str(temperature)); state = 3; break;
         case 3: locate_ddram(13, 0); state = 4; break;
         case 4: write_string(int_to_str(desired_temperature)); state = 5; break;
         case 5: locate_ddram(0, 1); state = 6; break;
@@ -149,12 +145,14 @@ void measure_temperature(volatile uint8_t* flags, uint16_t* temperature){
             *flags &= ~NO_TERMOCOUPLE_ATTACHED;
             *flags |= SAMPLE_READY;
             timer = 250; state = 2;
-            if((((int16_t)*temperature - (int16_t)desired_temperature) < 5) || ((int16_t)*temperature - (int16_t)desired_temperature) > -5){
-                displayed_temperature = displayed_temperature * 0.9 + *temperature * 0.1;
+            *flags |= GET_PID;
+            /*if((((int16_t)*temperature - (int16_t)desired_temperature) < 2) || ((int16_t)*temperature - (int16_t)desired_temperature) > -2){
+                displayed_temperature = displayed_temperature * 0.8 + *temperature * 0.2;
             }
             else{
                 displayed_temperature = *temperature;
-            }
+            }*/
+            displayed_temperature = displayed_temperature * 0.9 + *temperature * 0.1;
         }
         else{
             if(!(*flags & NO_TERMOCOUPLE_ATTACHED)){

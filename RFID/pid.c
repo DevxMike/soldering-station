@@ -19,6 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
 #include "pid.h"
+#include "uart.h"
 
 void init_pwm(void){
     PID_DDR |= (1 << PID_OFFSET);
@@ -26,47 +27,51 @@ void init_pwm(void){
 void init_PID(volatile PID_t* pid, double Kp, double Ti, double Td, double Ts){
     pid->Kp = Kp;
     pid->Ki = 0.5*(Kp / Ti) * Ts;
-    pid->Kd = Kp * Td;
-    pid->fraction_1 = (1.0 / (Td * 0.1 + Ts));
-    pid->fraction_2 = (0.1 * Td)/(0.1 * Td + Ts);
-    pid->derivative_before = 0.0;
-    pid->sum = pid->error = pid->error_before = 0;
-}
-void compute_error(volatile PID_t* pid, int16_t error){
-    pid->error_before = pid->error;
-    pid->error = error;
+    pid->Kd = (Kp * Td) / Ts;
+    pid->sum = pid->error_before = 0;
 }
 uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual_value){
     double P, I, D, temp;
-    int16_t sum;
     int16_t error = ((int16_t)desired_value - (int16_t)actual_value);
-
-    if(error <= 0){
-        return 0;
-    }
-
-    compute_error(pid, error);
-    P = pid->Kp * pid->error;   
+    int16_t sum;
     
-    if((sum = pid->error + pid->error_before + (int16_t)pid->sum) > 204){
-        pid->sum = 204;
+    if(error > 100){
+        P = 100.0;
     }
-    else if((sum < 0)){
-        pid->sum = 0;
+    else if(error < -100){
+        P = -100.0;
     }
     else{
+        P = pid->Kp * error;
+    }
+
+    sum = pid->sum + error;
+    if(sum > 175){
+        I = 175.0;
+        pid->sum = 175;
+    }
+    else if(sum < -175){
+        I = -175.0;
+        pid->sum = -175.0;
+    }
+    else{
+        I = pid->Ki * sum;
         pid->sum = sum;
     }
 
-    I = pid->Ki * pid->sum;
-    D = pid->Kd * (pid->fraction_1 * (pid->error - pid->error_before) + pid->fraction_2*pid->derivative_before);
-    pid->derivative_before = D;
+    D = pid->Kd * (pid->error_before - error);
+    pid->error_before = error;
 
-    if((temp = P + I + D) > 204.0){
-        return 204;
-    }
-    else if(temp < 0){
+    temp = P + I + D;
+
+
+    UART_puts("\n\r");
+
+    if(temp < 0.0){
         return 0;
+    }
+    else if(temp > 220.0){
+        return 220;
     }
     else{
         return (uint8_t)temp;

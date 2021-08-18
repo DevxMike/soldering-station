@@ -27,10 +27,9 @@ SOFTWARE.*/
 #define PID_OFFSET 2
 
 typedef struct{
-    double Kp, Ki, Kd, fraction_1, fraction_2;
-    int16_t error, error_before; 
-    uint8_t sum;
-    double derivative_before;
+    double Kp, Ki, Kd;
+    int16_t error_before; 
+    int16_t sum;
 }PID_t;
 
 void init_pwm(void);
