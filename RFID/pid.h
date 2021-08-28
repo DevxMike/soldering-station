@@ -27,7 +27,7 @@ SOFTWARE.*/
 #define PID_OFFSET 2
 
 typedef struct{
-    double Kp, Ki, Kd;
+    double Kp, Ki, Kd, dv_before, Kdv_before, Kd_filter;
     int16_t error_before; 
     int16_t sum;
 }PID_t;

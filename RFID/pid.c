@@ -29,6 +29,9 @@ void init_PID(volatile PID_t* pid, double Kp, double Ti, double Td, double Ts){
     pid->Ki = 0.5*(Kp / Ti) * Ts;
     pid->Kd = (Kp * Td) / Ts;
     pid->sum = pid->error_before = 0;
+    pid->dv_before = 0.0;
+    pid->Kdv_before = (0.1*Td)/(0.1*Td + Ts);
+    pid->Kd_filter = 1.0/(0.1*Td + Ts);
 }
 uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual_value){
     double P, I, D, temp;
@@ -46,32 +49,37 @@ uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual
     }
 
     sum = pid->sum + error;
-    if(sum > 175){
-        I = 175.0;
-        pid->sum = 175;
+    if(sum > 125){
+        I = 125.0;
+        pid->sum = 125;
     }
-    else if(sum < -175){
-        I = -175.0;
-        pid->sum = -175.0;
+    else if(sum < 0){
+        I = -125.0;
+        pid->sum = 0.0;
     }
     else{
         I = pid->Ki * sum;
         pid->sum = sum;
     }
 
-    D = pid->Kd * (pid->error_before - error);
+    D = pid->Kd * (pid->Kd_filter*(pid->error_before - error) + pid->Kdv_before*pid->dv_before);
+    if(D > 125.0){
+        D = 125.0;
+    }
+    else if(D < -125.0){
+        D = -125.0;
+    }
+    
+    pid->dv_before = D;
     pid->error_before = error;
 
     temp = P + I + D;
 
-
-    UART_puts("\n\r");
-
     if(temp < 0.0){
         return 0;
     }
-    else if(temp > 220.0){
-        return 220;
+    else if(temp > 255.0){
+        return 255;
     }
     else{
         return (uint8_t)temp;
