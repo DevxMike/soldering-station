@@ -27,7 +27,7 @@ void init_pwm(void){
 void init_PID(volatile PID_t* pid, double Kp, double Ti, double Td, double Ts){
     pid->Kp = Kp;
     pid->Ki = 0.5*(Kp / Ti) * Ts;
-    pid->Kd = (Kp * Td) / Ts;
+    pid->Kd = (Kp * Td);
     pid->sum = pid->error_before = 0;
     pid->dv_before = 0.0;
     pid->Kdv_before = (0.1*Td)/(0.1*Td + Ts);
@@ -38,23 +38,23 @@ uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual
     int16_t error = ((int16_t)desired_value - (int16_t)actual_value);
     int16_t sum;
     
-    if(error > 100){
-        P = 100.0;
+    if(error > 125){
+        P = 125.0;
     }
-    else if(error < -100){
-        P = -100.0;
+    else if(error < -125){
+        P = -125.0;
     }
     else{
         P = pid->Kp * error;
     }
 
     sum = pid->sum + error;
-    if(sum > 125){
-        I = 125.0;
-        pid->sum = 125;
+    if(sum > 160){
+        I = 300.0;
+        pid->sum = 160;
     }
     else if(sum < 0){
-        I = -125.0;
+        I = -300.0;
         pid->sum = 0.0;
     }
     else{
@@ -62,16 +62,29 @@ uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual
         pid->sum = sum;
     }
 
-    D = pid->Kd * (pid->Kd_filter*(pid->error_before - error) + pid->Kdv_before*pid->dv_before);
-    if(D > 125.0){
-        D = 125.0;
+    D = pid->Kd * (pid->Kd_filter*(error - pid->error_before) + pid->Kdv_before*pid->dv_before);
+    if(D > 120.0){
+        D = 120.0;
     }
-    else if(D < -125.0){
-        D = -125.0;
+    else if(D < -120.0){
+        D = -120.0;
     }
     
     pid->dv_before = D;
     pid->error_before = error;
+
+    /*UART_puts("P ");
+    UART_puts(int_to_str((int16_t)P));
+
+
+    UART_puts(" I ");
+    UART_puts(int_to_str((int16_t)I));
+
+
+    UART_puts(" D ");
+    UART_puts(int_to_str((int16_t)D));
+
+    UART_puts("\n\r");*/
 
     temp = P + I + D;
 

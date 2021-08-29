@@ -9,7 +9,7 @@
 #define DECREMENT_BTN_PORT PORTD
 #define INCREMENT 3
 #define DECREMENT 4
-#define TEMP_MAX 480
+#define TEMP_MAX 470
 #define TEMP_MIN 200
 
 typedef struct{
