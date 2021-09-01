@@ -1,5 +1,6 @@
 #include "controls.h"
 #include "config.h"
+#include "pid.h"
 
 void init_buttons(void){
     INCREMENT_BTN_PORT |= (1 << INCREMENT);
@@ -55,6 +56,7 @@ void manage_keyboard(volatile uint8_t* flags, const buttons_t* kbd, uint16_t* de
             *desired_temperature += 10;
         }
         *flags |= CHANGE_CONTENT;
+        *flags |= RESET_INTEGRATOR;
         timer = 150;
         state = 1;
         break;
@@ -85,6 +87,7 @@ void manage_keyboard(volatile uint8_t* flags, const buttons_t* kbd, uint16_t* de
             *desired_temperature -= 10;
         }
         *flags |= CHANGE_CONTENT;
+        *flags |= RESET_INTEGRATOR;
         timer = 150;
         state = 4;
         break;

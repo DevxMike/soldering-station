@@ -44,7 +44,7 @@ int main(void){
     buttons_t keyboard;
     
     init_buttons();
-    init_PID(&regulator, 0.5, 153.32, 38.33, 0.250);
+    init_PID(&regulator, 5.0, 50.0, 15.0, 0.250);
     init_display();
     init_UART(103);
     write_instruction(DISP_CTRL & BLINK_OFF & CURSOR_OFF); //turn on the display
@@ -73,7 +73,11 @@ int main(void){
         manage_keyboard(&main_flags, &keyboard, &desired_temperature);
         
         if(main_flags & GET_PID){
-            PID_pwm = get_PID_pwm(&regulator, desired_temperature, temperature);
+            if(main_flags & RESET_INTEGRATOR){
+                reset_integrator(&regulator);
+                main_flags &= ~RESET_INTEGRATOR;
+            }
+            PID_pwm = get_PID_pwm(&regulator, desired_temperature, displayed_temperature);
             main_flags &= ~GET_PID;
             UART_puts(int_to_str(displayed_temperature));
             UART_puts(" ");
