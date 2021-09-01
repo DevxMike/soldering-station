@@ -28,5 +28,6 @@ SOFTWARE.*/
 #define SAMPLE_READY 0x08
 #define GET_PID 0x10
 
+#define RESET_INTEGRATOR 0x20
 
 #endif

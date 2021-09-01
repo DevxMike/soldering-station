@@ -26,54 +26,35 @@ void init_pwm(void){
 }
 void init_PID(volatile PID_t* pid, double Kp, double Ti, double Td, double Ts){
     pid->Kp = Kp;
-    pid->Ki = 0.5*(Kp / Ti) * Ts;
-    pid->Kd = (Kp * Td);
+    pid->Ki = (Kp / Ti) * Ts;
+    pid->Kd = (Kp * Td)/(Ts + 0.1*Td);
     pid->sum = pid->error_before = 0;
-    pid->dv_before = 0.0;
-    pid->Kdv_before = (0.1*Td)/(0.1*Td + Ts);
-    pid->Kd_filter = 1.0/(0.1*Td + Ts);
+    //pid->dv_before = 0.0;
+    //pid->Kdv_before = (0.1*Td)/(0.1*Td + Ts);
+    //pid->Kd_filter = 1.0/(0.1*Td + Ts);
 }
 uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual_value){
     double P, I, D, temp;
     int16_t error = ((int16_t)desired_value - (int16_t)actual_value);
     int16_t sum;
     
-    if(error > 125){
-        P = 125.0;
-    }
-    else if(error < -125){
-        P = -125.0;
-    }
-    else{
-        P = pid->Kp * error;
-    }
+    P = pid->Kp * error;
 
     sum = pid->sum + error;
-    if(sum > 160){
-        I = 300.0;
-        pid->sum = 160;
+    if(sum > 2000){
+        pid->sum = 2000;
     }
-    else if(sum < 0){
-        I = -300.0;
-        pid->sum = 0.0;
+    else if(sum < -2000){
+        pid->sum = -2000;
     }
-    else{
-        I = pid->Ki * sum;
-        pid->sum = sum;
-    }
+    I = pid->Ki * sum;
+    pid->sum = sum;
 
-    D = pid->Kd * (pid->Kd_filter*(error - pid->error_before) + pid->Kdv_before*pid->dv_before);
-    if(D > 120.0){
-        D = 120.0;
-    }
-    else if(D < -120.0){
-        D = -120.0;
-    }
-    
-    pid->dv_before = D;
+    D = pid->Kd * (error - pid->error_before);
     pid->error_before = error;
 
-    /*UART_puts("P ");
+
+    UART_puts(" P ");
     UART_puts(int_to_str((int16_t)P));
 
 
@@ -84,7 +65,7 @@ uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual
     UART_puts(" D ");
     UART_puts(int_to_str((int16_t)D));
 
-    UART_puts("\n\r");*/
+    UART_puts("\n\r");
 
     temp = P + I + D;
 
@@ -97,4 +78,8 @@ uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual
     else{
         return (uint8_t)temp;
     }
+}
+
+void reset_integrator(volatile PID_t* pid){
+    pid->sum = 0;
 }

@@ -35,4 +35,5 @@ typedef struct{
 void init_pwm(void);
 void init_PID(volatile PID_t* pid, double Kp, double Ti, double Td, double Ts);
 uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual_value);
+void reset_integrator(volatile PID_t* pid);
 #endif

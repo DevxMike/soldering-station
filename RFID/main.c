@@ -44,7 +44,7 @@ int main(void){
     buttons_t keyboard;
     
     init_buttons();
-    init_PID(&regulator, 0.5, 153.32, 38.33, 0.250);
+    init_PID(&regulator, 5.0, 50.0, 15.0, 0.250);
     init_display();
     init_UART(103);
     write_instruction(DISP_CTRL & BLINK_OFF & CURSOR_OFF); //turn on the display
@@ -73,8 +73,18 @@ int main(void){
         manage_keyboard(&main_flags, &keyboard, &desired_temperature);
         
         if(main_flags & GET_PID){
-            PID_pwm = get_PID_pwm(&regulator, desired_temperature, temperature);
+            if(main_flags & RESET_INTEGRATOR){
+                reset_integrator(&regulator);
+                main_flags &= ~RESET_INTEGRATOR;
+            }
+            PID_pwm = get_PID_pwm(&regulator, desired_temperature, displayed_temperature);
             main_flags &= ~GET_PID;
+            UART_puts(int_to_str(displayed_temperature));
+            UART_puts(" ");
+            UART_puts(int_to_str(desired_temperature));
+            UART_puts(" ");
+            UART_puts(int_to_str(PID_pwm));
+            UART_puts("\n\r");
         }
         
         if(display_change) --display_change;
@@ -115,7 +125,7 @@ void manage_lcd(volatile uint8_t* flags){
     static uint8_t state = 0;
 
     switch(state){
-        case 0: if(*flags & CHANGE_CONTENT){ *flags &= ~CHANGE_CONTENT; state = 1; } break;
+        case 0: if(*flags & CHANGE_CONTENT){ *flags &= ~CHANGE_CONTENT; state = 0; } break;
         case 1: locate_ddram(4, 0); state = 2; break;
         case 2: if(displayed_temperature < 100){write_string(" ");} write_string(int_to_str(displayed_temperature)); state = 3; break;
         case 3: locate_ddram(13, 0); state = 4; break;
