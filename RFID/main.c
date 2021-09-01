@@ -78,6 +78,8 @@ int main(void){
             UART_puts(int_to_str(displayed_temperature));
             UART_puts(" ");
             UART_puts(int_to_str(desired_temperature));
+            UART_puts(" ");
+            UART_puts(int_to_str(PID_pwm));
             UART_puts("\n\r");
         }
         
@@ -119,7 +121,7 @@ void manage_lcd(volatile uint8_t* flags){
     static uint8_t state = 0;
 
     switch(state){
-        case 0: if(*flags & CHANGE_CONTENT){ *flags &= ~CHANGE_CONTENT; state = 1; } break;
+        case 0: if(*flags & CHANGE_CONTENT){ *flags &= ~CHANGE_CONTENT; state = 0; } break;
         case 1: locate_ddram(4, 0); state = 2; break;
         case 2: if(displayed_temperature < 100){write_string(" ");} write_string(int_to_str(displayed_temperature)); state = 3; break;
         case 3: locate_ddram(13, 0); state = 4; break;
