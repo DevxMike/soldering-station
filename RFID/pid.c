@@ -54,7 +54,7 @@ uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual
     pid->error_before = error;
 
 
-    UART_puts(" P ");
+    /*UART_puts(" P ");
     UART_puts(int_to_str((int16_t)P));
 
 
@@ -65,7 +65,7 @@ uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual
     UART_puts(" D ");
     UART_puts(int_to_str((int16_t)D));
 
-    UART_puts("\n\r");
+    UART_puts("\n\r");*/
 
     temp = P + I + D;
 
