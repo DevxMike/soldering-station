@@ -75,10 +75,6 @@ int main(void){
         if(main_flags & GET_PID){
             PID_pwm = get_PID_pwm(&regulator, desired_temperature, temperature);
             main_flags &= ~GET_PID;
-            UART_puts(int_to_str(displayed_temperature));
-            UART_puts(" ");
-            UART_puts(int_to_str(desired_temperature));
-            UART_puts("\n\r");
         }
         
         if(display_change) --display_change;
