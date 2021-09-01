@@ -80,7 +80,7 @@ int main(void){
             UART_puts(int_to_str(desired_temperature));
             UART_puts("\n\r");
         }
-
+        
         if(display_change) --display_change;
         else if(!(main_flags & (1 << CHANGE_CONTENT))){
             main_flags |= 1 << CHANGE_CONTENT;
