@@ -42,6 +42,7 @@ uint16_t displayed_temperature;
 int main(void){
     uint16_t display_change = 1000;  
     buttons_t keyboard;
+    int16_t temp;
     
     init_buttons();
     init_PID(&regulator, 5.0, 20.0, 5.0, 0.250);
@@ -71,13 +72,25 @@ int main(void){
         manage_lcd(&main_flags);
         measure_temperature(&main_flags, &temperature);
         manage_keyboard(&main_flags, &keyboard, &desired_temperature);
+
+        if(main_flags & TURN_PID_OFF){
+            temp = (int16_t)desired_temperature - (int16_t)displayed_temperature;
+            if(temp > -2){
+                main_flags &= ~TURN_PID_OFF;
+            }
+        }
         
         if(main_flags & GET_PID){
             if(main_flags & RESET_INTEGRATOR){
                 reset_integrator(&regulator);
                 main_flags &= ~RESET_INTEGRATOR;
             }
-            PID_pwm = get_PID_pwm(&regulator, desired_temperature, displayed_temperature);
+            if(main_flags & TURN_PID_OFF){
+                PID_pwm = 0;
+            }
+            else{
+                PID_pwm = get_PID_pwm(&regulator, desired_temperature, displayed_temperature);
+            }
             main_flags &= ~GET_PID;
             UART_puts(int_to_str(displayed_temperature));
             UART_puts(" ");

@@ -88,6 +88,7 @@ void manage_keyboard(volatile uint8_t* flags, const buttons_t* kbd, uint16_t* de
         }
         *flags |= CHANGE_CONTENT;
         *flags |= RESET_INTEGRATOR;
+        *flags |= TURN_PID_OFF;
         timer = 150;
         state = 4;
         break;

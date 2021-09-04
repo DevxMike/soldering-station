@@ -29,5 +29,5 @@ SOFTWARE.*/
 #define GET_PID 0x10
 
 #define RESET_INTEGRATOR 0x20
-
+#define TURN_PID_OFF 0x40
 #endif
