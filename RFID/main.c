@@ -44,7 +44,7 @@ int main(void){
     buttons_t keyboard;
     
     init_buttons();
-    init_PID(&regulator, 5.0, 20.0, 12.0, 0.250);
+    init_PID(&regulator, 5.0, 20.0, 5.0, 0.250);
     init_display();
     init_UART(103);
     write_instruction(DISP_CTRL & BLINK_OFF & CURSOR_OFF); //turn on the display

@@ -41,11 +41,11 @@ uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual
     P = pid->Kp * error;
 
     sum = pid->sum + error;
-    if(sum > 2000){
-        pid->sum = 2000;
+    if(sum > 500){
+        pid->sum = 500;
     }
-    else if(sum < -2000){
-        pid->sum = -2000;
+    else if(sum < -500){
+        pid->sum = -500;
     }
     I = pid->Ki * sum;
     pid->sum = sum;
