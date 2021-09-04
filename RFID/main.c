@@ -51,7 +51,7 @@ int main(void){
     write_instruction(DISP_CTRL & BLINK_OFF & CURSOR_OFF); //turn on the display
     write_string("T_A     T_D ");
     locate_ddram(0, 1);
-    write_string("HEATING ");
+    write_string("BAZAN 2021");
     init_pwm();
     init_spi();
     init_pwm_timer();
@@ -92,12 +92,13 @@ int main(void){
                 PID_pwm = get_PID_pwm(&regulator, desired_temperature, displayed_temperature);
             }
             main_flags &= ~GET_PID;
-            UART_puts(int_to_str(displayed_temperature));
+            //debug logs
+            /*UART_puts(int_to_str(displayed_temperature));
             UART_puts(" ");
             UART_puts(int_to_str(desired_temperature));
             UART_puts(" ");
             UART_puts(int_to_str(PID_pwm));
-            UART_puts("\n\r");
+            UART_puts("\n\r");*/
         }
         
         if(display_change) --display_change;
@@ -138,13 +139,11 @@ void manage_lcd(volatile uint8_t* flags){
     static uint8_t state = 0;
 
     switch(state){
-        case 0: if(*flags & CHANGE_CONTENT){ *flags &= ~CHANGE_CONTENT; state = 0; } break;
+        case 0: if(*flags & CHANGE_CONTENT){ *flags &= ~CHANGE_CONTENT; state = 1; } break;
         case 1: locate_ddram(4, 0); state = 2; break;
         case 2: if(displayed_temperature < 100){write_string(" ");} write_string(int_to_str(displayed_temperature)); state = 3; break;
         case 3: locate_ddram(13, 0); state = 4; break;
-        case 4: write_string(int_to_str(desired_temperature)); state = 5; break;
-        case 5: locate_ddram(0, 1); state = 6; break;
-        case 6: if(PID_pwm > 0) write_string("HEATING"); else write_string("       "); state = 0; break; 
+        case 4: write_string(int_to_str(desired_temperature)); state = 0; break;
     }
 }
 void measure_temperature(volatile uint8_t* flags, uint16_t* temperature){

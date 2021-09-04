@@ -29,9 +29,6 @@ void init_PID(volatile PID_t* pid, double Kp, double Ti, double Td, double Ts){
     pid->Ki = (Kp / Ti) * Ts;
     pid->Kd = (Kp * Td)/(Ts + 0.1*Td);
     pid->sum = pid->error_before = 0;
-    //pid->dv_before = 0.0;
-    //pid->Kdv_before = (0.1*Td)/(0.1*Td + Ts);
-    //pid->Kd_filter = 1.0/(0.1*Td + Ts);
 }
 uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual_value){
     double P, I, D, temp;
@@ -52,8 +49,8 @@ uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual
     D = pid->Kd * (error - pid->error_before);
     pid->error_before = error;
 
-
-    UART_puts(" P ");
+    //debug logs
+    /*UART_puts(" P ");
     UART_puts(int_to_str((int16_t)P));
 
 
@@ -64,7 +61,7 @@ uint8_t get_PID_pwm(volatile PID_t* pid, uint16_t desired_value, uint16_t actual
     UART_puts(" D ");
     UART_puts(int_to_str((int16_t)D));
 
-    UART_puts("\n\r");
+    UART_puts("\n\r");*/
 
     temp = P + I + D;
 
