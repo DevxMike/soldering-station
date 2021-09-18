@@ -1,5 +1,11 @@
 Soldering station with automatic temperature control.
 
+Docs:
+- in Polish 
+https://drive.google.com/file/d/12VjsodUqYXwC2c3A7bH9NmIJGYIXT1vv/view?usp=sharing
+
+- in English - coming soon
+
 This project is using Atmega8 as the brain of the circuit.
 To set this up in your environment, you need Atmega8a 
 which is configured to be clocked with 16MHz crystal.
